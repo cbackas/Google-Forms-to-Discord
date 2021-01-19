@@ -1,4 +1,4 @@
-var POST_URL = "WEBBHOOK URL";
+var POST_URL = "WEBHOOK URL";
 
 function onSubmit(e) {
     var form = FormApp.getActiveForm();
@@ -9,7 +9,7 @@ function onSubmit(e) {
 
     for (var i = 0; i < response.length; i++) {
         var question = response[i].getItem().getTitle();
-        var answer = response[i].getResponse();
+        var answer = response[i].getResponse().toString();
         try {
             var parts = answer.match(/[\s\S]{1,1024}/g) || [];
         } catch (e) {
@@ -21,11 +21,23 @@ function onSubmit(e) {
         }
         for (var j = 0; j < parts.length; j++) {
             if (j == 0) {
-                items.push({
+                // my mod to better present a specific question's response in the webhook
+                if (question.startsWith("What divisions and positions are you interested in?")) {
+                  // separate the 3 multiple choice responses and label them in a new string
+                  var driverSelections = parts[j].split(',');
+                  var formattedSelections = 'Dev: ' + driverSelections[0] + '\n' + 'Inter: ' + driverSelections[1] + '\n' + 'Pro: ' + driverSelections[2];
+                  items.push({
+                    "name": question,
+                    "value": formattedSelections,
+                    "inline": false
+                  });
+                } else {
+                  items.push({
                     "name": question,
                     "value": parts[j],
                     "inline": false
-                });
+                  });
+                }
             } else {
                 items.push({
                     "name": question.concat(" (cont.)"),
@@ -42,13 +54,13 @@ function onSubmit(e) {
             "Content-Type": "application/json",
         },
         "payload": JSON.stringify({
-            "content": "‌",
+            // "content": "", // commented to remove extra line
             "embeds": [{
-                "title": "Some nice title here",
-              "color": 33023, // This is optional, you can look for decimal colour codes at https://www.webtoolkitonline.com/hexadecimal-decimal-color-converter.html
+                "title": "New LNR Driver Application",
+              "color": 15990832, // This is optional, you can look for decimal colour codes at https://www.webtoolkitonline.com/hexadecimal-decimal-color-converter.html
                 "fields": items,
                 "footer": {
-                    "text": "Some footer here"
+                    "text": "Any admin please respond to said person ASAP"
                 }
             }]
         })
